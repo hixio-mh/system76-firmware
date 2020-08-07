@@ -1,3 +1,9 @@
+system76-firmware (1.0.14) focal; urgency=medium
+
+  * Support for transitioning to open firmware
+
+ -- Jeremy Soller <jeremy@system76.com>  Fri, 07 Aug 2020 14:34:47 -0600
+
 system76-firmware (1.0.13) focal; urgency=medium
 
   * Add oryp6

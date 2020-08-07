@@ -25,6 +25,7 @@ mod ec;
 mod me;
 mod mount;
 mod thelio_io;
+mod transition;
 
 pub use bios::bios;
 pub use ec::{ec, ec_or_none};
@@ -33,6 +34,7 @@ pub use thelio_io::{
     ThelioIo, ThelioIoMetadata,
     thelio_io_download, thelio_io_list, thelio_io_update
 };
+pub use transition::TransitionKind;
 
 const MODEL_WHITELIST: &[&str] = &[
     "addw1",
@@ -108,10 +110,11 @@ pub fn generate_firmware_id(model: &str, project: &str) -> String {
     format!("{}_{}", model, project_hash)
 }
 
-pub fn firmware_id() -> Result<String, String> {
+pub fn firmware_id(transition_kind: TransitionKind) -> Result<String, String> {
     let (bios_model, _bios_version) = bios::bios()?;
     let (ec_project, _ec_version) = ec_or_none(true);
-    Ok(generate_firmware_id(&bios_model, &ec_project))
+    let (transition_model, transition_ec) = transition_kind.transition(&bios_model, &ec_project);
+    Ok(generate_firmware_id(&transition_model, &transition_ec))
 }
 
 fn remove_dir<P: AsRef<Path>>(path: P) -> Result<(), String> {
@@ -128,8 +131,8 @@ fn remove_dir<P: AsRef<Path>>(path: P) -> Result<(), String> {
     Ok(())
 }
 
-pub fn download() -> Result<(String, String), String> {
-    download_firmware_id(&firmware_id()?)
+pub fn download(transition_kind: TransitionKind) -> Result<(String, String), String> {
+    download_firmware_id(&firmware_id(transition_kind)?)
 }
 
 pub fn download_firmware_id(firmware_id: &str) -> Result<(String, String), String> {
@@ -193,8 +196,8 @@ fn extract<P: AsRef<Path>>(digest: &str, file: &str, path: P) -> Result<(), Stri
     Ok(())
 }
 
-pub fn schedule(digest: &str, efi_dir: &str) -> Result<(), String> {
-    schedule_firmware_id(digest, efi_dir, &firmware_id()?)
+pub fn schedule(digest: &str, efi_dir: &str, transition_kind: TransitionKind) -> Result<(), String> {
+    schedule_firmware_id(digest, efi_dir, &firmware_id(transition_kind)?)
 }
 
 pub fn schedule_firmware_id(digest: &str, efi_dir: &str, firmware_id: &str) -> Result<(), String> {
